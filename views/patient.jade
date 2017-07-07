@@ -1,0 +1,10 @@
+extends layout
+block content
+    div#main
+        span#span1= title
+        div#connected
+        section#presence
+        div#messages
+block append head
+    script(type='text/javascript', src='/socket.io/socket.io.js')
+    script(type='text/javascript', src='js/patient.js')

@@ -12,6 +12,9 @@ var httpserver, app, io;
 var port;
 var apptitle = "presence"
 var io;
+var socketPS;
+var userSocket = {};
+var userSocketId = [];
 
 port=1234;
 app = express();
@@ -28,17 +31,56 @@ app.get('/',function(req,res){
 app.get('/presence',function(req,res){
  res.render('presence',{title: apptitle});
 });
+app.get('/ps',function(req,res){
+    res.render('ps',{title: 'Vue PS'});
+});
+app.get('/patient',function(req,res){
+    res.render('patient',{title: 'Vue Patient'});
+});
 httpserver = http.createServer(app);
 io = socket.listen(httpserver);
 // handle namespace : system and user
 
-var systemws = io.of("/system");
-var userws = io.of("/user");
+var patientws = io.of("/p");
+var santews = io.of("/ps");
 
-systemws.on("connection", function(socket){
+patientws.on("connection", function(socket){
+    socket.patientsocketid = socket.id;
+    userSocketId.push(socket.id);
+    console.log('Current socket id : ' + socket.id);
     socket.send(JSON.stringify(
             {type:'serverMessage',message:'Welcome !'})
+        
     );
+    if(socketPS) {
+        console.log("The socket id of ps is " +socketPS); 
+    }
+    /*socket.emit('ps_connected',
+        JSON.stringify(
+            {type:'serverMessage','pssocket': socketPS}
+            )
+        );
+        */
+    socket.emit('patient_connected',
+        JSON.stringify(
+            {type:'serverMessage','socketid': socket.id}
+            )
+        );
+    console.log("Trying to send message to PS inside his ns");
+    // nok santews.sockets.connected[socketPS].emit('message',
+    //io.in('prescripteur').emit('message',
+    io.of('/ps').emit('message',
+            JSON.stringify(
+                {type:'patientMessage','message':'hello I m a patient and i m connected through ' +socket.id}
+                )
+            );
+                
+    /*santews.broadcast.emit('patient_connected',
+        JSON.stringify(
+            {type:'serverMessage','socketid': socket.id}
+            )
+        );
+*/
     socket.on("disconnect", function(socket){
         console.log("Client disconnected");
     });
@@ -46,7 +88,7 @@ systemws.on("connection", function(socket){
             console.log("set_name event : "+data.name);
             socket.nickname = data.name;
             socket.emit('name_set',data);
-        socket.broadcast.emit('user_entered',data);
+            socket.broadcast.emit('user_entered',data);
     });
     socket.on("join_room",function(data){
         socket.room = data.room;
@@ -55,16 +97,19 @@ systemws.on("connection", function(socket){
         socket.in(socket.room).broadcast.emit('user_entered',{'name': socket.nickname});
     });
 });
-userws.on("connection",function(socket){
+santews.on("connection",function(socket){
+    socket.join('prescripteur');
+    socketPS = socket.id;
+    console.log('PS socket ID is '+socketPS);
+    socket.send(JSON.stringify(
+            {type:'serverMessage',message:'Connected  ! your socket id is '+socket.id})
+        
+    );
     socket.on("message", function(message){
-        message = JSON.parse(message);
-        if(message.type == "userMessage") {
-            socket.nickname = message.name;
-            message.nickname = socket.nickname;
-            socket.broadcast.send(JSON.stringify(message));
-            message.type = "myMessage";
-            socket.send(JSON.stringify(message));
-        }
+        socket.send(JSON.stringify(
+            {type:'serverMessage',message:'Welcome !'})
+        
+    );
     });
 
 });
