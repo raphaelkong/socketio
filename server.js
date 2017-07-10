@@ -15,6 +15,7 @@ var io;
 var socketPS;
 var userSocket = {};
 var userSocketId = [];
+var patients = [];
 
 port=1234;
 app = express();
@@ -48,6 +49,12 @@ patientws.on("connection", function(socket){
     socket.patientsocketid = socket.id;
     userSocketId.push(socket.id);
     console.log('Current socket id : ' + socket.id);
+    socket.join('h2ad');
+    io.of('p').in('h2ad').emit('room_message',
+        JSON.stringify(
+            {type:'serverMessage','messageroom': 'new socket joins room h2ad : '+socket.id}
+            )
+        );
     socket.send(JSON.stringify(
             {type:'serverMessage',message:'Welcome !'})
         
@@ -74,6 +81,9 @@ patientws.on("connection", function(socket){
                 {type:'patientMessage','message':'hello I m a patient and i m connected through ' +socket.id}
                 )
             );
+    io.of('/ps').emit('update_list',
+           patients 
+            );
                 
     /*santews.broadcast.emit('patient_connected',
         JSON.stringify(
@@ -81,6 +91,10 @@ patientws.on("connection", function(socket){
             )
         );
 */
+    socket.on("send_config",function(data){
+        console.log(socket.id+ " has sent its config  guid => " +data.guid+ " orgs => "+data.orgs);
+        patients.push("{guid:" +data.guid+",orgs:" + data.orgs+",socketid:" + socket.id+"}");
+    });
     socket.on("disconnect", function(socket){
         console.log("Client disconnected");
     });

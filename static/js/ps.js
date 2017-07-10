@@ -16,6 +16,13 @@ socket.on('patient_connected',function(data){
     data = JSON.parse(data);
     $('#connected').append('<div class=\'connected\'>Patient connected ! : your socketid is : '+data.socketid+'</div>');
 });
+socket.on('update_list',function(data){
+    console.log("new list !");
+    //data = JSON.parse(data);
+    //$('#connected').append('<div class=\'connected\'>Patient connected ! : your socketid is : '+data.socketid+'</div>');
+    console.log(data);
+});
+
 
 
 $(document).ready(function(){
