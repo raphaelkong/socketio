@@ -16,7 +16,7 @@ var socketPS;
 var userSocket = {};
 var userSocketId = [];
 var patients = [];
-
+var config = {};
 port=1234;
 app = express();
 app.set('views',__dirname+"/views");
@@ -82,7 +82,7 @@ patientws.on("connection", function(socket){
                 )
             );
     io.of('/ps').emit('update_list',
-           patients 
+           patients
             );
                 
     /*santews.broadcast.emit('patient_connected',
@@ -93,11 +93,25 @@ patientws.on("connection", function(socket){
 */
     socket.on("send_config",function(data){
         console.log(socket.id+ " has sent its config  guid => " +data.guid+ " orgs => "+data.orgs);
-        patients.push("{guid:" +data.guid+",orgs:" + data.orgs+",socketid:" + socket.id+"}");
+	
+	//patients.push(JSON.stringify("{guid:" +data.guid+",orgs:" + data.orgs+",socketid:" + socket.id+"}"));
+       // patients.push({'guid':" +data.guid+",'orgs':" + data.orgs+",'socketid':" + socket.id+"}");
+	    config.guid = data.guid;
+	    config.orgs = data.orgs;
+	    config.socketid = socket.id;
+	    patients.push(JSON.stringify(config));
+	    config = {};
     });
-    socket.on("disconnect", function(socket){
+    socket.on("disconnect", function(){
         console.log("Client disconnected");
+	console.log("The socket id " + socket.id + " is no more available");
+    	io.of('/ps').emit('Client disconnected',
+	JSON.stringify(
+		//{'socket': +socket.id})
+		{'socket': socket.id})
+	);
     });
+
     socket.on("set_name",function(data){
             console.log("set_name event : "+data.name);
             socket.nickname = data.name;

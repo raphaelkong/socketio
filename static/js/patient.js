@@ -1,4 +1,5 @@
 var remote = 'http://sjbw0052.h2ad.local:1234';
+var remote = 'http://localhost:1234';
 var socketNamespace = '/p';
 var socket = io.connect(remote+socketNamespace);
 var parsedURI ;
