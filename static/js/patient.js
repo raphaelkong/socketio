@@ -1,9 +1,10 @@
 var remote = 'http://sjbw0052.h2ad.local:1234';
-var remote = 'http://localhost:1234';
+//var remote = 'http://localhost:1234';
 var socketNamespace = '/p';
 //var socket = io.connect(remote+socketNamespace);
 var socket = io.connect(remote+socketNamespace,{'transports':['websocket']});
 var parsedURI ;
+var localdata = {};
 
 function parseURL(url){
     var parser = document.createElement('a'),
@@ -19,10 +20,9 @@ function parseURL(url){
     return searchObject;
 }
 parsedURI=parseURL(location.search);
-    var localdata = {};
-    localdata.guid = parsedURI.guid;
-    localdata.orgs = parsedURI.orgs;
-    localdata.type = 'patient';
+localdata.guid = parsedURI.guid;
+localdata.orgs = parsedURI.orgs;
+localdata.type = 'patient';
 
 socket.on('room_message_not_implemented', function(data){
     data = JSON.parse(data);
@@ -32,7 +32,7 @@ socket.on('message',function(data){
     data = JSON.parse(data);
     console.log("Socket connected !");
     console.log("Sending data to server  :" +localdata.guid + ' ' + localdata.orgs);
-    socket.emit('send_config',localdata);
+    socket.emit('send_config_patient',localdata);
     $('#messages').append('<div class="'+data.type+'">' + data.message +'</div>');
 });
 
@@ -45,6 +45,11 @@ socket.on('patient_connected',function(data){
     data = JSON.parse(data);
 	console.log("Message patient connected !");
     $('#connected').append('<div class=\'connected\'>Patient connected ! : your socketid is : '+data.socketid+'</div>');
+});
+socket.on('private_message',function(data){
+    data = JSON.parse(data);
+	console.log("private message received");
+    $('#connected').append('<div class=\'connected\'>pv message received from '+data.guid + '(socket id : '+data.socketid+') </div>');
 });
 
 $(document).ready(function(){

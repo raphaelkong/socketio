@@ -65,33 +65,42 @@ patientws.on("connection", function(socket){
             {type:'serverMessage','socketid': socket.id}
             )
         );
-    socket.on("send_config",function(data){
-        var config1 = {};
+    socket.on("send_config_patient",function(data){
+    var config1 = {};
 	var chatrooms = [] ;
 	var message = {};
-        socket.guid = data.guid ;
-        console.log(socket.patientsocketid+ " has sent its config  guid => " +socket.guid+" orgs => "+data.orgs);
+    socket.guid = data.guid ;
+    console.log(socket.patientsocketid+ " has sent its config  guid => " +socket.guid+" orgs => "+data.orgs);
 	chatrooms = data.orgs.split(',');
 	console.log("Socket ID " + socket.id + " will join "+ chatrooms.length + " chat room ! : " + data.orgs);
 	chatrooms.forEach(function(val,index,array){
-		socket.join(val);
-		message.messageroom = socket.guid+" joins room " + val;
-			io.of('/p').in(val).emit('room_message', JSON.stringify(message));
-			console.log("User " + socket.guid + " joins room "+val +" !");
-
+	socket.join(val);
+	message.messageroom = socket.guid+" joins room " + val;
+    message.guid = socket.guid;
+    message.socketid = socket.id;
+    message.type='server';
+    io.of('/p').in(val).emit('room_message_to_ps', JSON.stringify(message));
+	console.log("User " + socket.guid + " joins room "+val +" !");
 	});
-	console.log(io.sockets.adapter.rooms);
+    });
+    socket.on('private_message_to_patient',function(data){
+        data = JSON.parse(data);
+        console.log('receiving a private message from '+ data.socketidp +' to ' + data.socketidpatient +' (guid='+ data.guid+')');
+        io.of('/p').to(data.socketidpatient).emit('private_message',JSON.stringify(data));
+    });
+    socket.on("send_config_ps",function(data){
+    var config1 = {};
+	var chatrooms = [] ;
+	var message = {};
+    socket.guid = data.guid ;
+    socket.type = 'ps'; 
+    console.log(socket.patientsocketid+ " has sent its config  guid => " +socket.guid+" orgs => "+data.orgs);
+	chatrooms = data.orgs.split(',');
+	console.log("Socket ID " + socket.id + " will join "+ chatrooms.length + " chat room ! : " + data.orgs);
+	chatrooms.forEach(function(val,index,array){
+	socket.join(val);
+	});
 	    
-        // tracking guid and other settings
-                config1.guid = data.guid;
-                config1.orgs = data.orgs;
-                config1.socketid = socket.id;
-                //patients.push(JSON.stringify(config));
-                patients.push(config1);
-                currentIndex ++;
-        patients.forEach(function(val,index,array){
-            console.log("Index "+index + " - guid : "+val.guid +" socketid = " + val.socketid);
-        });
     });
     socket.on("disconnect", function(){
             console.log("Client disconnected");

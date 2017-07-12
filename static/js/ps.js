@@ -1,5 +1,5 @@
 var remote = 'http://sjbw0052.h2ad.local:1234';
-var remote = 'http://localhost:1234';
+//var remote = 'http://localhost:1234';
 var socketNamespace = '/p';
 var socket = io.connect(remote+socketNamespace,{'transports':['websocket']});
 // Should fix multi socket opening when refresh tab, but doesn t work
@@ -25,7 +25,7 @@ parsedURI=parseURL(location.search);
     localdata.orgs = parsedURI.orgs;
     localdata.type = 'ps';
 
-    socket.emit('send_config',localdata);
+    socket.emit('send_config_ps',localdata);
 
 socket.on('message',function(data){
     data = JSON.parse(data);
@@ -33,10 +33,20 @@ socket.on('message',function(data){
     $('#messages').append('<div class="'+data.type+'">' +data.message +'</div>');
 });
 
-socket.on('room_message', function(data){
+socket.on('room_message_to_ps', function(data){
+    var message = {};
     data = JSON.parse(data);
-    console.log("Message to room " + data.messageroom);
+    message.guid = localdata.guid;
+    message.socketidps = socket.id;
+    message.socketidpatient = data.socketid;
+    message.type = 'connect';
+    message.message = 'This is a private message';
     $('#messages').append('<div class="'+data.type+'">' + data.messageroom +'</div>');
+    $('#messages').append('<div id='+data.guid+' class="'+data.type+'"> send private message from '+ message.guid+ ' to '+data.guid+' using this socket id ' +data.socketid+'</div>');
+    $('#'+data.guid).click(function(){
+        alert('sending message to '+data.guid+' using this socket : '+data.socketid);
+        socket.emit('private_message_to_patient',JSON.stringify(message));
+    });
 });
 
 
@@ -46,7 +56,7 @@ socket.on("Client disconnected",function(data){
 });
 
 $(document).ready(function(){
-    $('#messages').html=''; 
+/*    $('#messages').html=''; 
     var test = [];
     test['azerty']="azeerty";
     test['qwerty']="qwerrty";
@@ -104,5 +114,6 @@ $(document).ready(function(){
             $('#'+val.guid).slideUp();
         });
     });
+    */
 });
 
