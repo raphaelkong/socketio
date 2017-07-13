@@ -70,14 +70,16 @@ patientws.on("connection", function(socket){
 	var chatrooms = [] ;
 	var message = {};
     socket.guid = data.guid ;
+    socket.orgs = data.orgs ;
     console.log(socket.patientsocketid+ " has sent its config  guid => " +socket.guid+" orgs => "+data.orgs);
 	chatrooms = data.orgs.split(',');
-	console.log("Socket ID " + socket.id + " will join "+ chatrooms.length + " chat room ! : " + data.orgs);
+	console.log("Socket ID " + socket.id + " will join "+ chatrooms.length + " chat room ! : " + data.orgs+' orgs : '+socket.orgs);
 	chatrooms.forEach(function(val,index,array){
 	socket.join(val);
 	message.messageroom = socket.guid+" joins room " + val;
     message.guid = socket.guid;
     message.socketid = socket.id;
+    message.orgs = socket.orgs ; 
     message.type='server';
     io.of('/p').in(val).emit('room_message_to_ps', JSON.stringify(message));
 	console.log("User " + socket.guid + " joins room "+val +" !");
@@ -92,6 +94,7 @@ patientws.on("connection", function(socket){
     var config1 = {};
 	var chatrooms = [] ;
 	var message = {};
+    socket.orgs = data.orgs;
     socket.guid = data.guid ;
     socket.type = 'ps'; 
     console.log(socket.patientsocketid+ " has sent its config  guid => " +socket.guid+" orgs => "+data.orgs);
@@ -103,9 +106,20 @@ patientws.on("connection", function(socket){
 	    
     });
     socket.on("disconnect", function(){
+        var message = {} ; 
+        var chatrooms ;
             console.log("Client disconnected");
-            console.log("The socket id " + socket.patientsocketid + " is no more available " + socket.guid);
+            console.log("The socket id " + socket.patientsocketid + " is no more available " + socket.guid +' (orgs to be alerted :  '+ socket.orgs);
+	        chatrooms = socket.orgs.split(',');
+	        chatrooms.forEach(function(val,index,array){
+	        message.messageroom = socket.guid+" joins room " + val;
+            message.guid = socket.guid;
+            message.socketid = socket.id;
+            message.orgs = socket.orgs ; 
+            message.type='server';
+            io.of('/p').in(val).emit('patient_left', JSON.stringify(message));
             console.log("The socket id " + socket.id + " is no more available");
+            });
     });
 
 

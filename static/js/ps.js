@@ -41,8 +41,20 @@ socket.on('room_message_to_ps', function(data){
     message.socketidpatient = data.socketid;
     message.type = 'connect';
     message.message = 'This is a private message';
-    $('#messages').append('<div class="'+data.type+'">' + data.messageroom +'</div>');
+    if($('#'+data.guid).length){
+        console.log('Duplicate GUID detected : new socket ID !');
+        console.log('Replcaing content of div '+ data.guid +' with new content !');
+        $('#'+data.guid).empty().append( 'send private message from '+ message.guid+ ' to '+data.guid+' using this socket id ' +data.socketid);
+        $('#'+data.guid).hide();
+        $('#'+data.guid).show('slow');
+        $('#'+data.guid).unbind('click');
+    }
+    else{
+    //$('#messages').append('<div class="'+data.type+'">' + data.messageroom +'</div>');
     $('#messages').append('<div id='+data.guid+' class="'+data.type+'"> send private message from '+ message.guid+ ' to '+data.guid+' using this socket id ' +data.socketid+'</div>');
+        $('#'+data.guid).hide();
+        $('#'+data.guid).show('slow');
+    } 
     $('#'+data.guid).click(function(){
         alert('sending message to '+data.guid+' using this socket : '+data.socketid);
         socket.emit('private_message_to_patient',JSON.stringify(message));
@@ -53,6 +65,10 @@ socket.on('room_message_to_ps', function(data){
 socket.on("Client disconnected",function(data){
 	data = JSON.parse(data);
 	console.log(data.socket +" is no more available");
+});
+socket.on("patient_left", function(data){
+    data = JSON.parse(data);
+    window.alert(data.guid+ ' '+ data.socketid);
 });
 
 $(document).ready(function(){
